@@ -1,10 +1,10 @@
 import request from '@/utils/http'
 import { AppRouteRecord } from '@/types/router'
 
-// 获取用户列表
-export function fetchGetUserList(params: Api.SystemManage.UserSearchParams) {
+// 获取量表列表 new
+export function assessList(params: Api.SystemManage.UserSearchParams) {
   return request.get<Api.SystemManage.UserList>({
-    url: '/api/user/list',
+    url: '/answer/list',
     params
   })
 }
@@ -20,6 +20,16 @@ export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
 // 获取菜单列表
 export function fetchGetMenuList() {
   return request.get<AppRouteRecord[]>({
-    url: '/api/v3/system/menus'
+    url: '/api/v3/system/menus/simple'
+  })
+}
+
+/* 
+ 生成PDF格式的报告 new
+*/
+export const getResultPdf = (id: string | number) => {
+  return request.get({
+    url: '/report/pdf/' + id,
+    responseType: 'blob'
   })
 }

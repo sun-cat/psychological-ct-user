@@ -15,8 +15,8 @@ export const staticRoutes: AppRouteRecordRaw[] = [
   // {
   //   path: '/welcome',
   //   name: 'WelcomeStatic',
-  //   component: () => import('@views/dashboard/console/index.vue'),
-  //   meta: { title: 'menus.dashboard.title' }
+  //   component: () => import('@views/questionnaire/console/index.vue'),
+  //   meta: { title: 'menus.questionnaire.title' }
   // },
   {
     path: '/auth/login',
@@ -53,20 +53,5 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     name: 'Exception500',
     component: () => import('@views/exception/500/index.vue'),
     meta: { title: '500', isHideTab: true }
-  },
-  {
-    path: '/outside',
-    component: () => import('@views/index/index.vue'),
-    name: 'Outside',
-    meta: { title: 'menus.outside.title' },
-    children: [
-      // iframe 内嵌页面
-      {
-        path: '/outside/iframe/:path',
-        name: 'Iframe',
-        component: () => import('@/views/outside/Iframe.vue'),
-        meta: { title: 'iframe' }
-      }
-    ]
   }
 ]

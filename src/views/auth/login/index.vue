@@ -18,18 +18,6 @@
             @keyup.enter="handleSubmit"
             style="margin-top: 25px"
           >
-            <ElFormItem prop="account">
-              <ElSelect v-model="formData.account" @change="setupAccount">
-                <ElOption
-                  v-for="account in accounts"
-                  :key="account.key"
-                  :label="account.label"
-                  :value="account.key"
-                >
-                  <span>{{ account.label }}</span>
-                </ElOption>
-              </ElSelect>
-            </ElFormItem>
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
@@ -116,7 +104,8 @@
   import { fetchLogin, fetchGetUserInfo } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useSettingStore } from '@/store/modules/setting'
-
+  // pc端固定客户端授权id
+  const clientId = import.meta.env.VITE_APP_CLIENT_ID
   defineOptions({ name: 'Login' })
 
   const settingStore = useSettingStore()
@@ -129,42 +118,7 @@
     formKey.value++
   })
 
-  type AccountKey = 'super' | 'admin' | 'user'
-
-  export interface Account {
-    key: AccountKey
-    label: string
-    userName: string
-    password: string
-    roles: string[]
-  }
-
-  const accounts = computed<Account[]>(() => [
-    {
-      key: 'super',
-      label: t('login.roles.super'),
-      userName: 'Super',
-      password: '123456',
-      roles: ['R_SUPER']
-    },
-    {
-      key: 'admin',
-      label: t('login.roles.admin'),
-      userName: 'Admin',
-      password: '123456',
-      roles: ['R_ADMIN']
-    },
-    {
-      key: 'user',
-      label: t('login.roles.user'),
-      userName: 'User',
-      password: '123456',
-      roles: ['R_USER']
-    }
-  ])
-
   const dragVerify = ref()
-
   const userStore = useUserStore()
   const router = useRouter()
   const isPassing = ref(false)
@@ -174,9 +128,8 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    account: '',
-    username: '',
-    password: '',
+    username: '2122',
+    password: '123456',
     rememberPassword: true
   })
 
@@ -187,17 +140,7 @@
 
   const loading = ref(false)
 
-  onMounted(() => {
-    setupAccount('super')
-  })
-
-  // 设置账号
-  const setupAccount = (key: AccountKey) => {
-    const selectedAccount = accounts.value.find((account: Account) => account.key === key)
-    formData.account = key
-    formData.username = selectedAccount?.userName ?? ''
-    formData.password = selectedAccount?.password ?? ''
-  }
+  onMounted(() => {})
 
   // 登录
   const handleSubmit = async () => {
@@ -219,18 +162,22 @@
       // 登录请求
       const { username, password } = formData
 
-      const { token, refreshToken } = await fetchLogin({
-        userName: username,
-        password
+      const { access_token, refreshToken } = await fetchLogin({
+        tenantId: '000000',
+        username: username,
+        password,
+        rememberMe: true,
+        clientId: clientId,
+        grantType: 'password'
       })
 
       // 验证token
-      if (!token) {
-        throw new Error('Login failed - no token received')
+      if (!access_token) {
+        throw new Error('Login failed - no access_token received')
       }
 
       // 存储token和用户信息
-      userStore.setToken(token, refreshToken)
+      userStore.setToken(access_token, refreshToken)
       const userInfo = await fetchGetUserInfo()
       userStore.setUserInfo(userInfo)
       userStore.setLoginStatus(true)

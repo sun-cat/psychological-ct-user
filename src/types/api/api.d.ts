@@ -64,13 +64,17 @@ declare namespace Api {
   namespace Auth {
     /** 登录参数 */
     interface LoginParams {
-      userName: string
+      username: string
       password: string
+      clientId: string
+      tenantId?: string
+      grantType: string
+      rememberMe?: boolean
     }
 
     /** 登录响应 */
     interface LoginResponse {
-      token: string
+      access_token: string
       refreshToken: string
     }
 
@@ -93,6 +97,7 @@ declare namespace Api {
     /** 用户列表项 */
     interface UserListItem {
       id: number
+      resultId: number | string
       avatar: string
       status: string
       userName: string

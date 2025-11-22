@@ -38,8 +38,8 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   showSuccessMessage?: boolean
 }
 
-const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
-
+const { VITE_API_URL, VITE_WITH_CREDENTIALS, VITE_APP_CLIENT_ID } = import.meta.env
+axios.defaults.headers['clientid'] = VITE_APP_CLIENT_ID
 /** Axios实例 */
 const axiosInstance = axios.create({
   timeout: REQUEST_TIMEOUT,
@@ -65,7 +65,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
     const { accessToken } = useUserStore()
-    if (accessToken) request.headers.set('Authorization', accessToken)
+    if (accessToken) request.headers.set('Authorization', 'Bearer ' + accessToken)
 
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
       request.headers.set('Content-Type', 'application/json')
@@ -83,6 +83,11 @@ axiosInstance.interceptors.request.use(
 /** 响应拦截器 */
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
+    // 如果是 Blob 类型（文件下载），直接返回
+    if (response.data instanceof Blob) {
+      return response
+    }
+
     const { code, msg } = response.data
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
@@ -177,12 +182,27 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
   try {
     const res = await axiosInstance.request<BaseResponse<T>>(config)
 
+    // 如果是 Blob 类型（文件下载），直接返回
+    if (config.responseType === 'blob') {
+      return res.data as T
+    }
+
     // 显示成功消息
     if (config.showSuccessMessage && res.data.msg) {
       showSuccess(res.data.msg)
     }
 
-    return res.data.data as T
+    // 兼容两种后端返回格式：
+    // 1. 标准格式: { code, msg, data: {...} }
+    // 2. 列表格式: { code, msg, total, rows, ... } (data 为 undefined)
+    if (res.data.data !== undefined) {
+      return res.data.data as T
+    } else {
+      // 如果 data 字段不存在，返回整个响应数据（去除 code 和 msg）
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { code, msg, ...rest } = res.data as any
+      return rest as T
+    }
   } catch (error) {
     if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
       const showMsg = config.showErrorMessage !== false

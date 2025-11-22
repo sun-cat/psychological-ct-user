@@ -44,9 +44,9 @@
         />
 
         <!-- 快速入口 -->
-        <ArtFastEnter v-if="shouldShowFastEnter && width >= headerBarFastEnterMinWidth">
+        <!-- <ArtFastEnter v-if="shouldShowFastEnter && width >= headerBarFastEnterMinWidth">
           <ArtIconButton icon="ri:function-line" class="ml-3" />
-        </ArtFastEnter>
+        </ArtFastEnter> -->
 
         <!-- 面包屑 -->
         <ArtBreadcrumb
@@ -62,7 +62,7 @@
 
       <div class="flex-c gap-2.5">
         <!-- 搜索 -->
-        <div
+        <!-- <div
           v-if="shouldShowGlobalSearch"
           class="flex-cb w-40 h-9 px-2.5 c-p border border-g-400 rounded-custom-sm max-md:!hidden"
           @click="openSearchDialog"
@@ -76,7 +76,7 @@
             <ArtSvgIcon v-else icon="ri:command-fill" class="text-xs" />
             <span class="ml-0.5 text-xs">k</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- 全屏按钮 -->
         <ArtIconButton
@@ -88,27 +88,27 @@
         />
 
         <!-- 通知按钮 -->
-        <ArtIconButton
+        <!-- <ArtIconButton
           v-if="shouldShowNotification"
           icon="ri:notification-2-line"
           class="notice-button relative"
           @click="visibleNotice"
         >
           <div class="absolute top-2 right-2 size-1.5 !bg-danger rounded-full"></div>
-        </ArtIconButton>
+        </ArtIconButton> -->
 
         <!-- 聊天按钮 -->
-        <ArtIconButton
+        <!-- <ArtIconButton
           v-if="shouldShowChat"
           icon="ri:message-3-line"
           class="chat-button relative"
           @click="openChat"
         >
           <div class="breathing-dot absolute top-2 right-2 size-1.5 !bg-success rounded-full"></div>
-        </ArtIconButton>
+        </ArtIconButton> -->
 
         <!-- 国际化按钮 -->
-        <ElDropdown
+        <!-- <ElDropdown
           @command="changeLanguage"
           popper-class="langDropDownStyle"
           v-if="shouldShowLanguage"
@@ -127,7 +127,7 @@
               </div>
             </ElDropdownMenu>
           </template>
-        </ElDropdown>
+        </ElDropdown> -->
 
         <!-- 设置按钮 -->
         <div v-if="shouldShowSettings">
@@ -177,7 +177,6 @@
   import { useUserStore } from '@/store/modules/user'
   import { useMenuStore } from '@/store/modules/menu'
   import AppConfig from '@/config'
-  import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
   import { themeAnimation } from '@/utils/ui/animation'
   import { useCommon } from '@/hooks/core/useCommon'
@@ -187,6 +186,7 @@
   defineOptions({ name: 'ArtHeaderBar' })
 
   // 检测操作系统类型
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isWindows = navigator.userAgent.includes('Windows')
 
   const router = useRouter()
@@ -198,19 +198,20 @@
   const menuStore = useMenuStore()
 
   // 顶部栏功能配置
+
   const {
     shouldShowMenuButton,
     shouldShowRefreshButton,
-    shouldShowFastEnter,
+    // shouldShowFastEnter,
     shouldShowBreadcrumb,
-    shouldShowGlobalSearch,
+    // shouldShowGlobalSearch,
     shouldShowFullscreen,
-    shouldShowNotification,
-    shouldShowChat,
-    shouldShowLanguage,
+    // shouldShowNotification,
+    // shouldShowChat,
+    // shouldShowLanguage,
     shouldShowSettings,
-    shouldShowThemeToggle,
-    fastEnterMinWidth: headerBarFastEnterMinWidth
+    shouldShowThemeToggle
+    // fastEnterMinWidth: headerBarFastEnterMinWidth
   } = useHeaderBar()
 
   const { menuOpen, systemThemeColor, showSettingGuide, menuType, isDark, tabStyle } =
@@ -284,6 +285,7 @@
    * 切换系统语言
    * @param {LanguageEnum} lang - 目标语言类型
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const changeLanguage = (lang: LanguageEnum): void => {
     if (locale.value === lang) return
     locale.value = lang
@@ -306,6 +308,7 @@
   /**
    * 打开全局搜索对话框
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openSearchDialog = (): void => {
     mittBus.emit('openSearchDialog')
   }
@@ -331,6 +334,7 @@
   /**
    * 切换通知面板显示状态
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const visibleNotice = (): void => {
     showNotice.value = !showNotice.value
   }
@@ -338,6 +342,7 @@
   /**
    * 打开聊天窗口
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openChat = (): void => {
     mittBus.emit('openChat')
   }
