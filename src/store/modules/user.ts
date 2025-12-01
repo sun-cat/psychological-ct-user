@@ -41,6 +41,7 @@ import { AppRouteRecord } from '@/types/router'
 import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/beforeEach'
 import { useMenuStore } from './menu'
+import { fetchLogout } from '@/api/auth'
 
 /**
  * 用户状态管理
@@ -138,29 +139,37 @@ export const useUserStore = defineStore(
      * 退出登录
      * 清空所有用户相关状态并跳转到登录页
      */
-    const logOut = () => {
-      // 清空用户信息
-      info.value = {}
-      // 重置登录状态
-      isLogin.value = false
-      // 重置锁屏状态
-      isLock.value = false
-      // 清空锁屏密码
-      lockPassword.value = ''
-      // 清空访问令牌
-      accessToken.value = ''
-      // 清空刷新令牌
-      refreshToken.value = ''
-      // 清空工作台已打开页面
-      useWorktabStore().opened = []
-      // 移除iframe路由缓存
-      sessionStorage.removeItem('iframeRoutes')
-      // 清空主页路径
-      useMenuStore().setHomePath('')
-      // 重置路由状态
-      resetRouterState()
-      // 跳转到登录页
-      router.push({ name: 'Login' })
+    const logOut = async () => {
+      try {
+        // 调用退出登录接口
+        await fetchLogout()
+      } catch (error) {
+        console.error('退出登录接口调用失败:', error)
+        // 即使接口调用失败，也继续执行本地清理操作
+      } finally {
+        // 清空用户信息
+        info.value = {}
+        // 重置登录状态
+        isLogin.value = false
+        // 重置锁屏状态
+        isLock.value = false
+        // 清空锁屏密码
+        lockPassword.value = ''
+        // 清空访问令牌
+        accessToken.value = ''
+        // 清空刷新令牌
+        refreshToken.value = ''
+        // 清空工作台已打开页面
+        useWorktabStore().opened = []
+        // 移除iframe路由缓存
+        sessionStorage.removeItem('iframeRoutes')
+        // 清空主页路径
+        useMenuStore().setHomePath('')
+        // 重置路由状态
+        resetRouterState()
+        // 跳转到登录页
+        router.push({ name: 'Login' })
+      }
     }
 
     return {

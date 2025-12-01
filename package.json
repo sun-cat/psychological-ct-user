@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite --open",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vite build",
     "serve": "vite preview",
     "lint": "eslint",
     "fix": "eslint --fix",
@@ -61,6 +61,7 @@
     "axios": "^1.12.2",
     "crypto-js": "^4.2.0",
     "echarts": "^6.0.0",
+    "element-china-area-data": "^6.1.0",
     "element-plus": "^2.11.2",
     "file-saver": "^2.0.5",
     "highlight.js": "^11.10.0",

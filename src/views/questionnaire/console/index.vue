@@ -142,7 +142,7 @@
               h(
                 ElButton,
                 {
-                  disabled: row.isSee !== '1',
+                  disabled: row.isSee !== 1,
                   type: 'success',
                   onClick: () => downloadReport(row)
                 },

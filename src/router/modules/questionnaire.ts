@@ -7,7 +7,7 @@ export const dashboardRoutes: AppRouteRecord = {
   meta: {
     title: 'menus.questionnaire.title',
     icon: 'ri:pie-chart-line',
-    roles: ['R_SUPER', 'R_ADMIN']
+    roles: ['R_SUPER', 'R_ADMIN'],
   },
   children: [
     {
@@ -17,7 +17,7 @@ export const dashboardRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.questionnaire.console',
         keepAlive: false,
-        fixedTab: true
+        fixedTab: true,
       }
     },
     {
@@ -27,7 +27,7 @@ export const dashboardRoutes: AppRouteRecord = {
       meta: {
         title: '量表答题',
         keepAlive: false,
-        fixedTab: false
+        fixedTab: false,
       }
     }
   ]

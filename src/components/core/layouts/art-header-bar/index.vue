@@ -130,7 +130,7 @@
         </ElDropdown> -->
 
         <!-- 设置按钮 -->
-        <div v-if="shouldShowSettings">
+        <!-- <div v-if="shouldShowSettings">
           <ElPopover :visible="showSettingGuide" placement="bottom-start" :width="190" :offset="0">
             <template #reference>
               <div class="flex-cc">
@@ -146,7 +146,7 @@
               </p>
             </template>
           </ElPopover>
-        </div>
+        </div> -->
 
         <!-- 主题切换按钮 -->
         <ArtIconButton

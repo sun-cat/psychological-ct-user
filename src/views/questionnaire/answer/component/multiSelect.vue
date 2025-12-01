@@ -1,6 +1,6 @@
 <template>
   <div class="radio-select-box" :class="{ 'large-font': fontSizeMode === 'large' }">
-    <!-- 单选题 -->
+    <!-- 多选题 -->
     <div class="header">
       <AudioPlayer :audioUrl="question.audio" />
       <div class="title" v-html="question.title"></div>
@@ -11,7 +11,7 @@
     <div class="select" v-if="question.optionStyleType === '1'">
       <div
         class="select-item-crosswise"
-        :class="{ active: selectedValue === item.optionId }"
+        :class="{ active: selectedValues.includes(item.optionId) }"
         v-for="(item, index) in question.options"
         :key="index"
         @click="selectOption(item.optionId)"
@@ -23,7 +23,7 @@
      <div class="select" v-else-if="question.optionStyleType === '2'">
       <div
         class="select-item"
-        :class="{ active: selectedValue === item.optionId }"
+        :class="{ active: selectedValues.includes(item.optionId) }"
         v-for="(item, index) in question.options"
         :key="index"
         @click="selectOption(item.optionId)"
@@ -44,8 +44,7 @@
     modelValue: any
   }
   interface Emits {
-    (e: 'update:modelValue', value: string | number): void
-    (e: 'onSelect', optionId: string): void
+    (e: 'update:modelValue', value: string[]): void
   }
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
@@ -53,17 +52,26 @@
   // 从父组件注入字体大小状态
   const fontSizeMode = inject<Ref<'normal' | 'large'>>('fontSizeMode', ref('normal'))
 
-  const selectedValue = computed({
-    get: () => props.modelValue,
-    set: (value: string | number) => emit('update:modelValue', value)
+  const selectedValues = computed({
+    get: () => props.modelValue || [],
+    set: (value: string[]) => emit('update:modelValue', value)
   })
   const question = computed(() => props.question)
 
-  // 选择选项
+  // 选择选项 - 多选逻辑：切换选中状态
   const selectOption = (optionId: string) => {
-    selectedValue.value = optionId
-    // 触发选择事件，通知父组件
-    emit('onSelect', optionId)
+    const currentValues = [...selectedValues.value]
+    const index = currentValues.indexOf(optionId)
+
+    if (index > -1) {
+      // 如果已选中，则移除
+      currentValues.splice(index, 1)
+    } else {
+      // 如果未选中，则添加
+      currentValues.push(optionId)
+    }
+
+    selectedValues.value = currentValues
   }
 </script>
 

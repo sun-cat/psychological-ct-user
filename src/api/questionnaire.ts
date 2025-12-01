@@ -30,3 +30,17 @@ export function resumeAnswer(resultId: string) {
     url: '/answer/resumeAnswer/' + resultId
   })
 }
+
+// 上传画板图片
+export function uploadDrawingImage(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return request.post<{ url: string }>({
+    url: '/resource/oss/patient/upload',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

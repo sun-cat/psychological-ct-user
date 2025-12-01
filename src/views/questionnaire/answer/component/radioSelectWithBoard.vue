@@ -1,13 +1,23 @@
 <template>
   <div class="radio-select-box" :class="{ 'large-font': fontSizeMode === 'large' }">
-    <!-- 单选题 -->
+    <!-- 单选画板题 -->
     <div class="header">
       <AudioPlayer :audioUrl="question.audio" />
       <div class="title" v-html="question.title"></div>
     </div>
 
     <ElDivider style="margin: 10px 0; border-color: #5d87ff" />
-    <div calss="desc" v-html="question.desc"></div>
+
+    <!-- 图片和画板并排显示 -->
+    <div class="content-wrapper">
+      <div class="desc-section">
+        <div class="desc" v-html="question.desc"></div>
+      </div>
+      <div class="board-section">
+        <DrawingBoard v-model="drawingData" />
+      </div>
+    </div>
+
     <div class="select" v-if="question.optionStyleType === '1'">
       <div
         class="select-item-crosswise"
@@ -20,7 +30,7 @@
         <div v-html="item.content"></div>
       </div>
     </div>
-     <div class="select" v-else-if="question.optionStyleType === '2'">
+    <div class="select" v-else-if="question.optionStyleType === '2'">
       <div
         class="select-item"
         :class="{ active: selectedValue === item.optionId }"
@@ -38,25 +48,46 @@
 <script setup lang="ts">
   import type { Ref } from 'vue'
   import AudioPlayer from './AudioPlayer.vue'
+  import DrawingBoard from './DrawingBoard.vue'
 
   interface Props {
     question: any
     modelValue: any
   }
+
   interface Emits {
-    (e: 'update:modelValue', value: string | number): void
+    (e: 'update:modelValue', value: any): void
     (e: 'onSelect', optionId: string): void
   }
+
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
 
   // 从父组件注入字体大小状态
   const fontSizeMode = inject<Ref<'normal' | 'large'>>('fontSizeMode', ref('normal'))
 
+  // 单选答案
   const selectedValue = computed({
-    get: () => props.modelValue,
-    set: (value: string | number) => emit('update:modelValue', value)
+    get: () => props.modelValue?.optionId || null,
+    set: (value: string | number) => {
+      emit('update:modelValue', {
+        optionId: value,
+        drawing: drawingData.value
+      })
+    }
   })
+
+  // 画板数据
+  const drawingData = ref<string>(props.modelValue?.drawing || '')
+
+  // 监听画板数据变化，同步到父组件
+  watch(drawingData, (newVal) => {
+    emit('update:modelValue', {
+      optionId: selectedValue.value,
+      drawing: newVal
+    })
+  })
+
   const question = computed(() => props.question)
 
   // 选择选项
@@ -88,6 +119,35 @@
           max-width: 60%;
           height: auto;
         }
+      }
+    }
+
+    .content-wrapper {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+
+      .desc-section {
+        flex: 1;
+        min-width: 0;
+
+        .desc {
+          :deep(p) {
+            padding: 0;
+            margin: 0;
+          }
+
+          :deep(img) {
+            max-width: 100%;
+            height: auto;
+            display: block;
+          }
+        }
+      }
+
+      .board-section {
+        flex: 1;
+        min-width: 0;
       }
     }
 
