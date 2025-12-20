@@ -27,6 +27,9 @@
   let lastX = 0
   let lastY = 0
 
+  // 保存当前画布内容（用于重新初始化时恢复）
+  let savedImageData: string = ''
+
   // 初始化画布
   const initCanvas = () => {
     if (!canvasRef.value) return
@@ -36,8 +39,16 @@
     if (!container) return
 
     // 设置画布大小为容器大小
-    canvas.width = container.clientWidth
-    canvas.height = container.clientHeight
+    const width = container.clientWidth
+    const height = container.clientHeight
+
+    // 如果容器尺寸为0（隐藏状态），不进行初始化
+    if (width === 0 || height === 0) {
+      return
+    }
+
+    canvas.width = width
+    canvas.height = height
 
     ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -52,11 +63,32 @@
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // 如果有初始值，加载图片
-    if (props.modelValue) {
+    // 如果有保存的图像数据，优先恢复
+    if (savedImageData) {
+      loadImage(savedImageData)
+    } else if (props.modelValue) {
+      // 否则如果有初始值，加载图片
       loadImage(props.modelValue)
     }
   }
+
+  // 重新初始化画布（当组件从隐藏变为可见时调用）
+  const reinitCanvas = () => {
+    // 保存当前的画布数据
+    if (canvasRef.value && canvasRef.value.width > 0) {
+      savedImageData = canvasRef.value.toDataURL('image/png')
+    } else if (props.modelValue) {
+      savedImageData = props.modelValue
+    }
+
+    // 重新初始化
+    initCanvas()
+  }
+
+  // 暴露方法给父组件
+  defineExpose({
+    reinitCanvas
+  })
 
   // 加载图片到画布
   const loadImage = (base64: string) => {

@@ -44,7 +44,12 @@
                 <durationQuestion :question="item" v-model="item.answer" />
               </template>
               <template v-if="item.type === '10'">
-                <radioSelectWithBoard :question="item" v-model="item.answer" @onSelect="handleRadioSelect" />
+                <radioSelectWithBoard 
+                  :question="item" 
+                  v-model="item.answer" 
+                  :isVisible="activeIndex === index"
+                  @onSelect="handleRadioSelect" 
+                />
               </template>
             </div>
           </div>

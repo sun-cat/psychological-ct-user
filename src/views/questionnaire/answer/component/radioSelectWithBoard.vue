@@ -14,7 +14,7 @@
         <div class="desc" v-html="question.desc"></div>
       </div>
       <div class="board-section">
-        <DrawingBoard v-model="drawingData" />
+        <DrawingBoard ref="drawingBoardRef" v-model="drawingData" />
       </div>
     </div>
 
@@ -53,6 +53,7 @@
   interface Props {
     question: any
     modelValue: any
+    isVisible?: boolean // 标记当前题目是否可见
   }
 
   interface Emits {
@@ -65,6 +66,26 @@
 
   // 从父组件注入字体大小状态
   const fontSizeMode = inject<Ref<'normal' | 'large'>>('fontSizeMode', ref('normal'))
+
+  // 获取 DrawingBoard 组件的引用
+  const drawingBoardRef = ref<InstanceType<typeof DrawingBoard> | null>(null)
+
+  // 监听题目可见性变化，重新初始化画布
+  watch(
+    () => props.isVisible,
+    (newVisible) => {
+      if (newVisible) {
+        // 当题目变为可见时，延迟一小段时间后重新初始化画布
+        // 确保 DOM 已经完全渲染和显示
+        nextTick(() => {
+          setTimeout(() => {
+            drawingBoardRef.value?.reinitCanvas()
+          }, 50)
+        })
+      }
+    },
+    { immediate: true }
+  )
 
   // 单选答案
   const selectedValue = computed({
