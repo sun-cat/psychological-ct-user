@@ -19,6 +19,12 @@ export const staticRoutes: AppRouteRecordRaw[] = [
   //   meta: { title: 'menus.questionnaire.title' }
   // },
   {
+    path: '/questionnaire/answer/:id',
+    name: 'QuestionnaireAnswer',
+    component: () => import('@views/questionnaire/answer/index.vue'),
+    meta: { title: '量表答题', isHideTab: true }
+  },
+  {
     path: '/auth/login',
     name: 'Login',
     component: () => import('@views/auth/login/index.vue'),

@@ -44,3 +44,12 @@ export function uploadDrawingImage(file: File) {
     }
   })
 }
+/**
+ * 查询测评任务列表
+ */
+export function answerTaskList(data: any) {
+  return request.get<any>({
+    url: '/answer/task/list',
+    params: data
+  })
+}

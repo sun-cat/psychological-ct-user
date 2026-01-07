@@ -127,7 +127,7 @@
 
       .title {
         margin-left: 6px;
-        font-size: 18px;
+        font-size: 24px;
         transition: font-size 0.3s ease;
 
         // 富文本内容样式重置
@@ -178,7 +178,7 @@
         align-items: center;
         padding: 10px 20px;
         margin: 14px 10px;
-        font-size: 14px;
+        font-size: 18px;
         cursor: pointer;
         background-color: #f7f7f7;
         border-radius: 50px;
@@ -215,7 +215,7 @@
         align-items: center;
         padding: 10px 0;
         margin: 14px 0;
-        font-size: 14px;
+        font-size: 18px;
         cursor: pointer;
         background-color: #f7f7f7;
         border-radius: 50px;
@@ -251,15 +251,15 @@
     // 大字体模式
     &.large-font {
       .header .title {
-        font-size: 24px; // 从 18px 增大到 24px
+        font-size: 36px; // 从 18px 增大到 24px
       }
 
       .select .select-item {
-        font-size: 18px; // 从 14px 增大到 18px
+        font-size: 24px; // 从 14px 增大到 18px
       }
 
       .select .select-item-crosswise {
-        font-size: 18px; // 从 14px 增大到 18px
+        font-size: 24px; // 从 14px 增大到 18px
       }
     }
   }

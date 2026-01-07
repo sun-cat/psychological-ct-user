@@ -44,11 +44,11 @@
                 <durationQuestion :question="item" v-model="item.answer" />
               </template>
               <template v-if="item.type === '10'">
-                <radioSelectWithBoard 
-                  :question="item" 
-                  v-model="item.answer" 
+                <radioSelectWithBoard
+                  :question="item"
+                  v-model="item.answer"
                   :isVisible="activeIndex === index"
-                  @onSelect="handleRadioSelect" 
+                  @onSelect="handleRadioSelect"
                 />
               </template>
             </div>
@@ -75,7 +75,7 @@
             >
               提交
             </div>
-            <div @click="toggleFontSize">【{{ fontSizeMode === 'large' ? '大' : '正常' }}】</div>
+            <div @click="toggleFontSize">【{{ fontSizeMode === 'large' ? '正常' : '大' }}】</div>
             <div @click="openDialog">指导语</div>
           </div>
         </ElCol>
@@ -136,6 +136,7 @@
     submitAnswer as submitAnswerApi,
     resumeAnswer,
     uploadDrawingImage,
+    answerTaskList,
     type SubmitAnswerParams
   } from '@/api/questionnaire'
   import radioSelect from './component/radioSelect.vue'
@@ -283,7 +284,7 @@
 
     if (submitSuccess) {
       // 添加短暂延迟，让用户看到选中效果
-      setTimeout(() => {
+      setTimeout(async () => {
         // 判断是否是最后一题
         if (activeIndex.value < data.value.questions.length - 1) {
           // 不是最后一题，自动跳转到下一题
@@ -291,9 +292,34 @@
           questionStartTime.value = Date.now()
           window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
-          // 如果是最后一题，提交成功后返回列表页
-          ElMessage.success('量表提交成功')
-          router.push({ name: 'Console' })
+          const res = await answerTaskList({ taskId: data.value.result.taskId, status: '0' })
+          if (res.length > 0) {
+            ElMessage.info('您还有未完成的测评任务，正在跳转...')
+            setTimeout(() => {
+              router.push({
+                name: 'Answer',
+                params: { id: res[0].resultId },
+                query: { t: Date.now() }
+              })
+            }, 1000)
+            return
+          }
+
+          // 如果是最后一题
+          const isInIframe = window.self !== window.top
+
+          if (isInIframe) {
+            window.parent.postMessage(
+              {
+                type: 'ANSWER_COMPLETED',
+                resultId: resultId
+              },
+              '*'
+            )
+          } else {
+            ElMessage.success('量表提交成功')
+            router.push({ name: 'Console' })
+          }
         }
         isAutoNavigating.value = false
       }, 400) // 400ms 延迟，让用户看到选中效果
@@ -448,7 +474,9 @@
         return false
       }
 
-      const selectedOption = question.options.find((opt: any) => opt.optionId === answerData.optionId)
+      const selectedOption = question.options.find(
+        (opt: any) => opt.optionId === answerData.optionId
+      )
 
       if (!selectedOption) {
         console.error('未找到选中的选项')
@@ -548,7 +576,11 @@
       }
     } else if (currentQuestion.type === '2') {
       // 多选题：检查是否至少选择了一个选项
-      if (!currentQuestion.answer || !Array.isArray(currentQuestion.answer) || currentQuestion.answer.length === 0) {
+      if (
+        !currentQuestion.answer ||
+        !Array.isArray(currentQuestion.answer) ||
+        currentQuestion.answer.length === 0
+      ) {
         ElMessage.warning('请至少选择一个选项')
         return
       }
@@ -621,7 +653,11 @@
         return
       }
     } else if (currentQuestion.type === '2') {
-      if (!currentQuestion.answer || !Array.isArray(currentQuestion.answer) || currentQuestion.answer.length === 0) {
+      if (
+        !currentQuestion.answer ||
+        !Array.isArray(currentQuestion.answer) ||
+        currentQuestion.answer.length === 0
+      ) {
         ElMessage.warning('请至少选择一个选项')
         return
       }
@@ -696,10 +732,36 @@
         cancelButtonText: '取消',
         type: 'warning'
       })
-
       ElMessage.success('量表提交成功')
-      // 返回到量表列表页面
-      await router.push({ name: 'Console' })
+      // 检查是否还有未完成的任务
+      const res = await answerTaskList({ taskId: data.value.result.taskId, status: '0' })
+      if (res.length > 0) {
+        ElMessage.info('您还有未完成的测评任务，正在跳转...')
+        setTimeout(() => {
+          router.push({
+            name: 'Answer',
+            params: { id: res[0].resultId },
+            query: { t: Date.now() }
+          })
+        }, 1000)
+        return
+      }
+      // 判断是否在 iframe 中
+      const isInIframe = window.self !== window.top
+
+      if (isInIframe) {
+        // 如果在 iframe 中，通知父窗口
+        window.parent.postMessage(
+          {
+            type: 'ANSWER_COMPLETED',
+            resultId: resultId
+          },
+          '*'
+        ) // 生产环境建议指定具体域名
+      } else {
+        // 如果不在 iframe 中，按原流程跳转到 Console
+        await router.push({ name: 'Console' })
+      }
     } catch (error) {
       // 用户取消提交
       if (error === 'cancel') {
@@ -717,8 +779,21 @@
         cancelButtonText: '继续答题',
         type: 'warning'
       })
-      // 用户确认退出，返回到量表列表页面
-      await router.push({ name: 'Console' })
+      const isInIframe = window.self !== window.top
+
+      if (isInIframe) {
+        // 通知父窗口用户取消答题
+        window.parent.postMessage(
+          {
+            type: 'ANSWER_CANCELLED',
+            resultId: resultId
+          },
+          '*'
+        )
+      } else {
+        // 按原流程返回 Console
+        await router.push({ name: 'Console' })
+      }
     } catch (error) {
       // 用户取消，继续答题
       console.log('用户选择继续答题')

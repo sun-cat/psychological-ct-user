@@ -269,14 +269,20 @@ async function handleDynamicRoutes(
 /**
  * 获取用户信息
  *
- * 注意：每次动态路由注册时都会重新获取用户信息，确保数据最新
- * 这样可以避免以下问题：
- * 1. 用户信息过期但仍使用 localStorage 中的旧数据
- * 2. 权限变更后不能及时更新
- * 3. 用户信息在后台被修改后前端不同步
+ * 优先使用 Pinia store 中的用户信息（从父窗口传递并已设置的）
+ * 如果 store 中没有用户信息，则调用 API 获取
  */
 async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
+  
+  // 检查 Pinia store 中是否已有用户信息（从父窗口传递的）
+  if (userStore.info && userStore.info.userId) {
+    console.log('✅ 使用 Pinia store 中的用户信息（来自父窗口）')
+    return
+  }
+  
+  // Store 中没有用户信息，调用 API 获取
+  console.log('📡 从 API 获取用户信息...')
   const data = await fetchGetUserInfo()
   userStore.setUserInfo(data)
 }

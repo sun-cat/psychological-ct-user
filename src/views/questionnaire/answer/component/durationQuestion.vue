@@ -70,7 +70,7 @@
 
       .title {
         margin-left: 6px;
-        font-size: 18px;
+        font-size: 24px;
         transition: font-size 0.3s ease;
 
         // 富文本内容样式重置
@@ -96,7 +96,7 @@
         gap: 15px;
 
         .unit {
-          font-size: 14px;
+          font-size: 18px;
           color: #606266;
           margin-right: 10px;
         }
@@ -124,7 +124,7 @@
           }
 
           .el-input__inner {
-            font-size: 14px;
+            font-size: 18px;
             text-align: center;
 
             &::placeholder {
@@ -138,24 +138,24 @@
     // 大字体模式
     &.large-font {
       .header .title {
-        font-size: 24px; // 从 18px 增大到 24px
+        font-size: 36px; // 从 18px 增大到 24px
       }
 
       .duration-input {
         .duration-group {
           .unit {
-            font-size: 18px; // 从 14px 增大到 18px
+            font-size: 24px; // 从 14px 增大到 18px
           }
 
           :deep(.el-input-number) {
             width: 140px;
 
             .el-input__wrapper {
-              padding: 12px 15px;
+              padding:18px;
             }
 
             .el-input__inner {
-              font-size: 18px; // 从 14px 增大到 18px
+              font-size: 24px; // 从 14px 增大到 18px
             }
           }
         }
