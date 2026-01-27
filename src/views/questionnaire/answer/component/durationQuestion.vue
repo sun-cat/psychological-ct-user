@@ -49,14 +49,48 @@
   watch(
     () => props.modelValue,
     (newVal) => {
-      hours.value = newVal
+      if (newVal !== null && newVal !== undefined) {
+        hours.value = newVal
+      } else {
+        // modelValue 为空时，尝试使用 defaultValue
+        const defaultValue = props.question?.defaultValue
+        if (defaultValue !== null && defaultValue !== undefined) {
+          const numValue = Number(defaultValue)
+          if (!isNaN(numValue)) {
+            hours.value = numValue
+            // 同步给父组件
+            nextTick(() => {
+              emit('update:modelValue', numValue)
+            })
+          }
+        } else {
+          hours.value = 0
+        }
+      }
     },
     { immediate: true }
   )
 
+  // 监听 question.defaultValue 变化
+  watch(
+    () => props.question?.defaultValue,
+    (newVal) => {
+      // 仅在当前无答案时使用 defaultValue
+      if ((props.modelValue === null || props.modelValue === undefined) && newVal !== null && newVal !== undefined) {
+        const numValue = Number(newVal)
+        if (!isNaN(numValue)) {
+          hours.value = numValue
+          // 同步给父组件
+          nextTick(() => {
+            emit('update:modelValue', numValue)
+          })
+        }
+      }
+    }
+  )
+
   // 处理时长变化
   const handleDurationChange = () => {
-  
     const durationStr = hours.value 
     emit('update:modelValue', durationStr)
   }

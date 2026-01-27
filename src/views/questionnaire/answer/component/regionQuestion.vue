@@ -71,6 +71,31 @@
   // 级联选择器的值（地区代码数组）
   const regionValue = ref<string[]>([])
 
+  // 监听父组件传入的值（地区文本），转换为地区代码数组以实现回显
+  watch(() => props.modelValue, (newValue) => {
+    if (newValue && typeof newValue === 'string') {
+      // 将地区文本 "山西省 / 长治市 / 屯留区" 拆分为数组
+      const regionTexts = newValue.split(' / ').map((t: string) => t.trim())
+      
+      // 通过反向查找 codeToText 找到对应的地区代码
+      const codes = regionTexts.map((text: string) => {
+        for (const [code, name] of Object.entries(codeToText)) {
+          if (name === text) {
+            return code
+          }
+        }
+        return null
+      }).filter((code): code is string => code !== null)
+      
+      // 设置地区代码数组到级联选择器
+      regionValue.value = codes
+      console.log('地区题回显 - 地区文本:', newValue)
+      console.log('地区题回显 - 转换后的代码:', codes)
+    } else {
+      regionValue.value = []
+    }
+  }, { immediate: true })
+
   // 处理地区选择变化
   const handleRegionChange = (value: any) => {
     if (value && value.length > 0) {

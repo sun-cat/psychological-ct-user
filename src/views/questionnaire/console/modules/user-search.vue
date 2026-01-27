@@ -1,16 +1,20 @@
 <template>
-  <ArtSearchBar
-    ref="searchBarRef"
-    v-model="formData"
-    :items="formItems"
-    :rules="rules"
-    @reset="handleReset"
-    @search="handleSearch"
-  >
-  </ArtSearchBar>
+  <ElCard shadow="never" class="mb-4">
+    <div class="flex items-center gap-4">
+      <span class="text-sm font-medium">量表列表：</span>
+      <ElRadioGroup v-model="formData.status" @change="handleStatusChange">
+        <ElRadioButton label="0,1">未完成</ElRadioButton>
+        <ElRadioButton label="2">已完成</ElRadioButton>
+      </ElRadioGroup>
+      <ElButton :icon="RefreshRight" @click="handleRefresh">刷新</ElButton>
+    </div>
+  </ElCard>
 </template>
 
 <script setup lang="ts">
+  import { RefreshRight } from '@element-plus/icons-vue'
+  import { ElCard, ElRadioGroup, ElRadioButton, ElButton } from 'element-plus'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -23,42 +27,18 @@
   const emit = defineEmits<Emits>()
 
   // 表单数据双向绑定
-  const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  // 校验规则
-  const rules = {}
-
-  onMounted(async () => {})
-
-  // 表单配置
-  const formItems = computed(() => [
-    {
-      label: '状态',
-      key: 'status',
-      type: 'select',
-      props: {
-        placeholder: '请选择状态',
-        options: [
-          { label: '未完成', value: '0,1' },
-          { label: '已完成', value: '2' }
-        ]
-      }
-    }
-  ])
-
-  // 事件
-  function handleReset() {
-    console.log('重置表单')
-    emit('reset')
+  // 状态改变时自动触发搜索
+  function handleStatusChange() {
+    emit('search', formData.value)
   }
 
-  async function handleSearch() {
-    await searchBarRef.value.validate()
+  // 刷新按钮 - 重新加载当前筛选条件的数据
+  function handleRefresh() {
     emit('search', formData.value)
-    console.log('表单数据', formData.value)
   }
 </script>

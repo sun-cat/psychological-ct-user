@@ -80,12 +80,43 @@ declare namespace Api {
 
     /** 用户信息 */
     interface UserInfo {
-      buttons: string[]
-      roles: string[]
-      userId: number
-      userName: string
-      email: string
-      avatar?: string
+      // 用户基本信息
+      userId: string
+      tenantId: string
+      deptId: number
+      assessNumber: string
+      userNumber?: string | null
+      legalCaseNo?: string
+      nickName: string
+      sex: string
+      sexText: string
+      userAge: number
+      userBirth: string
+      nationality: string
+      nationalityText?: string
+      phonenumber: string
+      avatar?: string | null
+      password?: string
+      profession: string
+      departmentName: string
+      cultural: string
+      culturalText: string
+      testerSource: string
+      testerSourceText: string
+      preDiagnosis?: string
+      nativeLace?: string
+      maritalStatus: string
+      maritalStatusText: string
+      teamType?: string
+      status: string
+      remark?: string
+      createTime: string
+      
+      // 保留可能需要的权限相关字段（可选，用于兼容性）
+      buttons?: string[]
+      roles?: string[]
+      userName?: string
+      email?: string
     }
   }
 

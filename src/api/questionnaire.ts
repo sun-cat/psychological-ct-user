@@ -53,3 +53,11 @@ export function answerTaskList(data: any) {
     params: data
   })
 }
+/* 
+结束答题调用
+*/
+export function finishAnswer(resultId: string) {
+  return request.get<any>({
+    url: '/answer/finishAnswer/' + resultId
+  })
+}

@@ -42,7 +42,7 @@
   // 用户状态配置
   const USER_STATUS_CONFIG = {
     '0': { type: 'info' as const, text: '未开始' },
-    '1': { type: 'warning' as const, text: '进行中' },
+    '1': { type: 'warning' as const, text: '未答完' },
     '2': { type: 'success' as const, text: '已完成' }
   } as const
 
@@ -86,9 +86,9 @@
           label: '量表名称',
           align: 'center'
         },
-        {
-          prop: 'createByName',
-          label: '昵称',
+       {
+          prop: 'createTime',
+          label: '创建日期',
           align: 'center'
         },
         {
@@ -106,9 +106,11 @@
           align: 'center',
           width: 500,
           formatter: (row) => {
-            // 计算答题进度百分比
-            const progress =
-              row.iniScore > 0 ? Math.round((row.answerCount / row.iniScore) * 100) : 0
+            // 已完成状态强制显示100%，避免跳题导致的计算错误
+            const progress = row.status === '2' 
+              ? 100 
+              : (row.iniScore > 0 ? Math.round((row.answerCount / row.iniScore) * 100) : 0)
+            
             return h('div', { class: 'flex items-center gap-2' }, [
               h('div', { class: 'flex-1' }, [
                 h(ElProgress, {
@@ -121,41 +123,41 @@
               h(
                 'span',
                 { class: 'text-xs text-gray-500 whitespace-nowrap ml-2' },
-                `${row.answerCount}/${row.iniScore}`
+                row.status === '2' ? '已完成' : `${row.answerCount}/${row.iniScore}`
               )
             ])
           }
         },
-        // {
-        //   prop: 'createTime',
-        //   label: '创建日期',
-        //   sortable: true
-        // },
         {
           prop: 'operation',
           label: '操作',
           width: 320,
           fixed: 'right', // 固定列
           align: 'center',
-          formatter: (row) =>
+          formatter: (row: any) =>
             h('div', [
-              h(
-                ElButton,
-                {
-                  disabled: row.isSee !== 1,
-                  type: 'success',
-                  onClick: () => downloadReport(row)
-                },
-                () => '查看报告'
-              ),
-              h(
-                ElButton,
-                {
-                  type: 'primary',
-                  onClick: () => startQuestions(row)
-                },
-                () => '开始答题'
-              )
+              // 需求2：查看报告按钮 - 只在 status === '2' 且 isSee === 1 时显示
+              ...(row.status === '2' && row.isSee === 1 ? [
+                h(
+                  ElButton,
+                  {
+                    type: 'success',
+                    onClick: () => downloadReport(row)
+                  },
+                  () => '查看报告'
+                )
+              ] : []),
+              // 需求1：开始/继续答题按钮 - status !== '2' 时显示
+              ...(row.status !== '2' ? [
+                h(
+                  ElButton,
+                  {
+                    type: 'primary',
+                    onClick: () => startQuestions(row)
+                  },
+                  () => row.status === '0' ? '开始答题' : '继续答题'
+                )
+              ] : [])
             ])
         }
       ]

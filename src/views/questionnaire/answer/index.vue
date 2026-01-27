@@ -137,6 +137,7 @@
     resumeAnswer,
     uploadDrawingImage,
     answerTaskList,
+    finishAnswer,
     type SubmitAnswerParams
   } from '@/api/questionnaire'
   import radioSelect from './component/radioSelect.vue'
@@ -158,6 +159,9 @@
 
   // 记录每道题的开始时间
   const questionStartTime = ref<number>(Date.now())
+
+  // 记录答题路径（用于"上一题"功能）
+  const answeredPath = ref<number[]>([])
 
   // 存储 questionIndex 和 lastQno
   const questionIndex = ref<number | null>(null)
@@ -194,6 +198,37 @@
     questionIndex.value = res.questionIndex
     lastQno.value = res.lastQno
 
+    // 初始化题目的答案格式和跳过标记
+    if (data.value?.questions) {
+      data.value.questions.forEach((question: any) => {
+        // 根据题型转换答案格式
+        if (question.type === '1') {
+          // 单选题：使用 optionId 而不是 answer（content）
+          question.answer = question.optionId || null
+        } else if (question.type === '2') {
+          // 多选题：将 optionId 转换为数组
+          if (question.optionId) {
+            // 可能是逗号分隔的多个 optionId
+            question.answer = question.optionId.split(',').filter((id: string) => id.trim())
+          } else {
+            question.answer = []
+          }
+        } else if (question.type === '10') {
+          // 单选画板题：构造对象格式
+          question.answer = {
+            optionId: question.optionId || null,
+            drawing: question.answer || ''  // answer 字段存储的是画板图片URL
+          }
+        }
+        // 其他题型（3,4,5,8,9）的 answer 格式已经正确，不需要转换
+        
+        // 初始化跳过标记
+        if (!question.hasOwnProperty('skipped')) {
+          question.skipped = false
+        }
+      })
+    }
+
     // 等待 DOM 更新完成后再显示弹窗，避免位置跳动
     await nextTick()
 
@@ -225,6 +260,8 @@
       // 从第一题开始
       activeIndex.value = 0
       questionStartTime.value = Date.now()
+      // 重置答题路径
+      answeredPath.value = []
     } catch (error) {
       console.error('开始答题失败:', error)
       ElMessage.error('开始答题失败，请重试')
@@ -239,6 +276,10 @@
       // 跳转到上次答题的位置
       activeIndex.value = questionIndex.value
       questionStartTime.value = Date.now()
+      
+      // 初始化答题路径：将0到questionIndex-1的题目都加入路径
+      answeredPath.value = Array.from({ length: questionIndex.value }, (_, i) => i)
+      
       continueDialogVisible.value = false
       ElMessage.success(`已跳转到第 ${questionIndex.value + 1} 题`)
     } else {
@@ -261,12 +302,179 @@
           // 其他题型初始化为空字符串或 null
           question.answer = null
         }
+        // 重置跳过标记
+        question.skipped = false
       })
     }
     activeIndex.value = 0
     questionStartTime.value = Date.now()
+    // 重置答题路径
+    answeredPath.value = []
     continueDialogVisible.value = false
     ElMessage.info('从第一题开始答题')
+  }
+
+  // 根据选项title获取optionId
+  const getOptionIdByTitle = (question: any, title: string) => {
+    const option = question.options?.find((opt: any) => opt.title === title)
+    return option?.optionId || null
+  }
+
+  // 检查题目是否已答
+  const hasAnswer = (question: any) => {
+    if (question.type === '2') {
+      return Array.isArray(question.answer) && question.answer.length > 0
+    }
+    return question.answer != null && question.answer !== ''
+  }
+
+  // 评估单个条件
+  const evaluateCondition = (condition: any, question: any) => {
+    const { type, value } = condition
+
+    switch (type) {
+      case 'choice':
+        // 检查是否选中指定选项
+        if (question.type === '1') {
+          // 单选题：answer是optionId
+          const targetOptionId = getOptionIdByTitle(question, value)
+          return question.answer === targetOptionId
+        }
+        return false
+
+      case 'unChoice':
+        // 检查是否未选中指定选项
+        if (question.type === '1') {
+          const targetOptionId = getOptionIdByTitle(question, value)
+          return question.answer !== targetOptionId
+        }
+        return false
+
+      case 'answered':
+        // 检查是否已答题
+        return hasAnswer(question)
+
+      case 'unAnswered':
+        // 检查是否未答题
+        return !hasAnswer(question)
+
+      default:
+        return false
+    }
+  }
+
+  // 检查逻辑规则是否触发
+  const checkControlRule = (control: any, questions: any[]) => {
+    const { operator, conditions } = control
+
+    const results = conditions.map((condition: any) => {
+      const question = questions.find((q: any) => q.qno === condition.qno)
+      if (!question) return false
+      return evaluateCondition(condition, question)
+    })
+
+    // 根据operator决定逻辑关系
+    return operator === 'or' ? results.some((r: boolean) => r) : results.every((r: boolean) => r)
+  }
+
+  // 标记被跳过的题目
+  const markSkippedQuestions = (fromIndex: number, toIndex: number) => {
+    if (!data.value?.questions) return
+
+    const start = Math.min(fromIndex, toIndex)
+    const end = Math.max(fromIndex, toIndex)
+
+    for (let i = start + 1; i < end; i++) {
+      data.value.questions[i].skipped = true
+    }
+  }
+
+  // 获取下一题索引（含跳转逻辑）
+  const getNextQuestionIndex = (currentIndex: number) => {
+    const controls = questionnaireData.value?.controls || []
+    const currentQuestion = data.value.questions[currentIndex]
+
+    // 只对单选题检查逻辑规则
+    if (currentQuestion.type !== '1') {
+      return currentIndex + 1
+    }
+
+    // 检查所有逻辑规则（按顺序）
+    for (const control of controls) {
+      // 判断规则是否应用于当前题目
+      const isRelevant = control.conditions.some((c: any) => c.qno === currentQuestion.qno)
+
+      if (isRelevant && checkControlRule(control, data.value.questions)) {
+        console.log('触发逻辑规则:', control)
+
+        // 规则触发，执行跳转
+        if (control.action.toQno === 'finish') {
+          return -1 // 表示提前结束
+        }
+
+        // 找到目标题目索引
+        const targetIndex = data.value.questions.findIndex(
+          (q: any) => q.qno === control.action.toQno
+        )
+
+        if (targetIndex !== -1 && targetIndex > currentIndex) {
+          // 标记跳过的题目
+          markSkippedQuestions(currentIndex, targetIndex)
+          return targetIndex
+        }
+      }
+    }
+
+    // 无规则触发，正常下一题
+    return currentIndex + 1
+  }
+
+  // 处理提前结束
+  const handleEarlyFinish = async () => {
+    try {
+      // 调用结束答题接口
+      try {
+        await finishAnswer(resultId)
+        console.log('提前结束-答题结束接口调用成功')
+      } catch (error) {
+        console.error('提前结束-答题结束接口调用失败:', error)
+        ElMessage.error('提交失败，请重试')
+        return // 阻止后续流程
+      }
+
+      // 检查是否还有未完成的任务
+      const res = await answerTaskList({ taskId: data.value.result.taskId, status: '0' })
+      if (res.length > 0) {
+        ElMessage.info('您还有未完成的测评任务，正在跳转...')
+        setTimeout(() => {
+          router.push({
+            name: 'Answer',
+            params: { id: res[0].resultId },
+            query: { t: Date.now() }
+          })
+        }, 1000)
+        return
+      }
+
+      // 判断是否在 iframe 中
+      const isInIframe = window.self !== window.top
+
+      if (isInIframe) {
+        window.parent.postMessage(
+          {
+            type: 'ANSWER_COMPLETED',
+            resultId: resultId
+          },
+          '*'
+        )
+      } else {
+        ElMessage.success('量表提交成功')
+        router.push({ name: 'Console' })
+      }
+    } catch (error) {
+      console.error('提前结束处理失败:', error)
+      ElMessage.error('提交失败，请重试')
+    }
   }
 
   // 处理单选题选择事件（自动跳转到下一题）
@@ -283,15 +491,38 @@
     const submitSuccess = await submitCurrentAnswer(currentQuestion)
 
     if (submitSuccess) {
+      // 记录当前题目到答题路径
+      if (!answeredPath.value.includes(activeIndex.value)) {
+        answeredPath.value.push(activeIndex.value)
+      }
+
       // 添加短暂延迟，让用户看到选中效果
       setTimeout(async () => {
-        // 判断是否是最后一题
-        if (activeIndex.value < data.value.questions.length - 1) {
-          // 不是最后一题，自动跳转到下一题
-          activeIndex.value++
+        // 获取下一题索引（含跳转逻辑）
+        const nextIndex = getNextQuestionIndex(activeIndex.value)
+
+        if (nextIndex === -1) {
+          // 触发提前结束
+          await handleEarlyFinish()
+        } else if (nextIndex < data.value.questions.length) {
+          // 跳转到下一题
+          activeIndex.value = nextIndex
           questionStartTime.value = Date.now()
           window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
+          // 已经是最后一题，处理提交
+          
+          // 调用结束答题接口
+          try {
+            await finishAnswer(resultId)
+            console.log('单选自动完成-答题结束接口调用成功')
+          } catch (error) {
+            console.error('单选自动完成-答题结束接口调用失败:', error)
+            ElMessage.error('提交失败，请重试')
+            isAutoNavigating.value = false
+            return // 阻止后续流程
+          }
+
           const res = await answerTaskList({ taskId: data.value.result.taskId, status: '0' })
           if (res.length > 0) {
             ElMessage.info('您还有未完成的测评任务，正在跳转...')
@@ -305,7 +536,6 @@
             return
           }
 
-          // 如果是最后一题
           const isInIframe = window.self !== window.top
 
           if (isInIframe) {
@@ -540,24 +770,49 @@
     isManualOpen.value = true
     dialogVisible.value = true
   }
+
   // 计算进度条
   const percent = computed(() => {
     return Math.round((100 * (activeIndex.value + 1)) / data.value.questions.length)
   })
-  // 上一题
+
+  // 上一题（改进版：返回到上一个实际作答的题目）
   const preQuestion = () => {
-    if (activeIndex.value > 0) {
-      activeIndex.value--
-      // 重置下一题的开始时间
+    if (answeredPath.value.length === 0 || activeIndex.value === 0) {
+      ElMessage.warning('已经是第一题了')
+      return
+    }
+
+    // 找到当前题目在答题路径中的位置
+    const currentPathIndex = answeredPath.value.indexOf(activeIndex.value)
+
+    if (currentPathIndex > 0) {
+      // 返回到答题路径中的上一个题目
+      const prevAnsweredIndex = answeredPath.value[currentPathIndex - 1]
+      activeIndex.value = prevAnsweredIndex
+
+      // 清除当前位置之后的答题路径（因为可能会重新答题）
+      answeredPath.value = answeredPath.value.slice(0, currentPathIndex)
+
+      // 清除从上一题到当前题之间所有题目的跳过标记
+      for (let i = prevAnsweredIndex + 1; i < data.value.questions.length; i++) {
+        data.value.questions[i].skipped = false
+      }
+
+      // 重置开始时间
       questionStartTime.value = Date.now()
-      // 滚动到顶部，确保用户看到题目
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (activeIndex.value > 0) {
+      // 如果当前题目不在答题路径中，就简单返回上一题
+      activeIndex.value--
+      questionStartTime.value = Date.now()
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       ElMessage.warning('已经是第一题了')
     }
   }
 
-  // 下一题
+  // 下一题（非单选题使用）
   const nextQuestion = async () => {
     // 如果正在自动跳转，阻止手动点击
     if (isAutoNavigating.value) {
@@ -630,6 +885,11 @@
       return
     }
 
+    // 记录当前题目到答题路径（非单选题）
+    if (!answeredPath.value.includes(activeIndex.value)) {
+      answeredPath.value.push(activeIndex.value)
+    }
+
     // 判断是否是最后一题
     if (activeIndex.value < data.value.questions.length - 1) {
       activeIndex.value++
@@ -699,8 +959,13 @@
       return
     }
 
-    // 检查是否所有题目都已作答
+    // 检查是否所有题目都已作答（排除被跳过的题目）
     const unansweredQuestions = data.value.questions.filter((q: any) => {
+      // 如果题目被跳过，不需要验证
+      if (q.skipped) {
+        return false
+      }
+
       if (q.type === '1') {
         return !q.answer && q.answer !== 0
       } else if (q.type === '2') {
@@ -733,6 +998,17 @@
         type: 'warning'
       })
       ElMessage.success('量表提交成功')
+
+      // 调用结束答题接口
+      try {
+        await finishAnswer(resultId)
+        console.log('答题结束接口调用成功')
+      } catch (error) {
+        console.error('答题结束接口调用失败:', error)
+        ElMessage.error('提交失败，请重试')
+        return // 阻止后续流程
+      }
+
       // 检查是否还有未完成的任务
       const res = await answerTaskList({ taskId: data.value.result.taskId, status: '0' })
       if (res.length > 0) {
