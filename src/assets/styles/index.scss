@@ -21,3 +21,9 @@
 
 // 主题切换圆形扩散动画
 @use './core/theme-animation.scss';
+
+// 移动端响应式样式
+@use './mobile.scss';
+
+// 题型组件移动端样式
+@use './components/question-mobile.scss';

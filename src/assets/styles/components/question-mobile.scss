@@ -1,0 +1,253 @@
+// 题型组件移动端响应式样式
+$mobile-breakpoint: 768px;
+
+@media (max-width: $mobile-breakpoint) {
+  // 单选题和多选题移动端样式
+  .radio-select-box,
+  .multi-select-box {
+    // 标题样式
+    .header .title {
+      font-size: 18px !important;
+      margin-left: 0 !important;
+
+      :deep(img) {
+        max-width: 100% !important;
+      }
+    }
+
+    // 描述文字
+    .desc {
+      font-size: 14px !important;
+      margin: 8px 0 !important;
+    }
+
+    // 选项容器
+    .select {
+      // 横向布局选项 - 移动端改为纵向
+      .select-item-crosswise {
+        display: flex !important;
+        width: 100% !important;
+        margin: 12px 0 !important;
+        padding: 16px !important;
+        font-size: 16px !important;
+        border-radius: 12px !important;
+        min-height: 44px !important;
+        position: relative !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+
+        .item-1 {
+          min-width: 24px !important;
+          margin-right: 8px !important;
+          pointer-events: none !important;
+        }
+
+        // 所有内层元素不接收点击，让事件穿透到外层
+        > div {
+          pointer-events: none !important;
+        }
+
+        :deep(img) {
+          max-width: 100% !important;
+          pointer-events: none !important;
+        }
+
+        :deep(*) {
+          pointer-events: none !important;
+        }
+      }
+
+      // 纵向布局选项
+      .select-item {
+        width: 100% !important;
+        margin: 12px 0 !important;
+        padding: 16px !important;
+        font-size: 16px !important;
+        border-radius: 12px !important;
+        min-height: 44px !important;
+        position: relative !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+
+        .item-1 {
+          margin: 0 12px 0 0 !important;
+          min-width: 24px !important;
+          pointer-events: none !important;
+        }
+
+        // 所有内层元素不接收点击，让事件穿透到外层
+        > div {
+          pointer-events: none !important;
+        }
+
+        :deep(img) {
+          max-width: 100% !important;
+          pointer-events: none !important;
+        }
+
+        :deep(*) {
+          pointer-events: none !important;
+        }
+      }
+
+      // 未选中状态的hover（移动端禁用PC端的hover效果）
+      .select-item-crosswise:hover:not(.active),
+      .select-item:hover:not(.active) {
+        color: inherit !important;
+        background-color: #f7f7f7 !important;
+      }
+
+      // 选中状态样式（确保优先级最高）
+      .select-item-crosswise.active,
+      .select-item.active {
+        color: #fff !important;
+        background-color: #5d87ff !important;
+      }
+
+      // 选中状态的hover（保持蓝色）
+      .select-item-crosswise.active:hover,
+      .select-item.active:hover {
+        color: #fff !important;
+        background-color: #5d87ff !important;
+      }
+
+      // 未选中时的点击反馈
+      .select-item-crosswise:active:not(.active),
+      .select-item:active:not(.active) {
+        background-color: #d1d5db !important;
+        transform: scale(0.98) !important;
+        transition: all 0.1s ease !important;
+      }
+
+      // 已选中时的点击反馈（保持蓝色，稍微深一点）
+      .select-item-crosswise.active:active,
+      .select-item.active:active {
+        background-color: #4c73cc !important;
+        transform: scale(0.98) !important;
+        transition: all 0.1s ease !important;
+      }
+    }
+
+    // 大字体模式
+    &.large-font {
+      .header .title {
+        font-size: 22px !important;
+      }
+
+      .select .select-item,
+      .select .select-item-crosswise {
+        font-size: 18px !important;
+      }
+    }
+  }
+
+  // 简答题移动端样式
+  .short-answer-box {
+    .header .title {
+      font-size: 18px !important;
+
+      :deep(img) {
+        max-width: 100% !important;
+      }
+    }
+
+    .answer-input {
+      :deep(.el-textarea__inner) {
+        min-height: 120px !important;
+        font-size: 16px !important;
+        padding: 12px !important;
+        line-height: 1.6 !important;
+      }
+    }
+
+    &.large-font {
+      .header .title {
+        font-size: 22px !important;
+      }
+
+      .answer-input :deep(.el-textarea__inner) {
+        font-size: 18px !important;
+      }
+    }
+  }
+
+  // 日期/时间/时长题移动端样式
+  .date-question-box,
+  .time-question-box,
+  .duration-question-box {
+    .header .title {
+      font-size: 18px !important;
+
+      :deep(img) {
+        max-width: 100% !important;
+      }
+    }
+
+    :deep(.el-date-editor),
+    :deep(.el-time-picker),
+    :deep(.el-input) {
+      width: 100% !important;
+      max-width: 100% !important;
+
+      .el-input__inner {
+        font-size: 16px !important;
+        height: 44px !important;
+        line-height: 44px !important;
+      }
+    }
+
+    &.large-font {
+      .header .title {
+        font-size: 22px !important;
+      }
+
+      :deep(.el-input__inner) {
+        font-size: 18px !important;
+        height: 48px !important;
+        line-height: 48px !important;
+      }
+    }
+  }
+
+  // 地区选择题移动端样式
+  .region-question-box {
+    .header .title {
+      font-size: 18px !important;
+
+      :deep(img) {
+        max-width: 100% !important;
+      }
+    }
+
+    :deep(.el-cascader) {
+      width: 100% !important;
+
+      .el-input__inner {
+        font-size: 16px !important;
+        height: 44px !important;
+        line-height: 44px !important;
+      }
+    }
+
+    &.large-font {
+      .header .title {
+        font-size: 22px !important;
+      }
+
+      :deep(.el-input__inner) {
+        font-size: 18px !important;
+        height: 48px !important;
+        line-height: 48px !important;
+      }
+    }
+  }
+
+  // 音频播放器移动端优化
+  .audio-player {
+    :deep(.el-icon) {
+      font-size: 20px !important;
+    }
+  }
+}

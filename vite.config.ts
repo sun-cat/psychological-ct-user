@@ -31,7 +31,7 @@ export default ({ mode }: { mode: string }) => {
           target: VITE_API_PROXY_URL,
           changeOrigin: true,
           ws: true,
-          rewrite: (path) => path.replace(new RegExp(`^${VITE_API_URL}`), '')
+          // rewrite: (path) => path.replace(new RegExp(`^${VITE_API_URL}`), '')
         }
       },
       host: true

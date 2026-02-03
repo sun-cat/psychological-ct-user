@@ -1,7 +1,8 @@
 <template>
   <div class="user-page art-full-height">
     <ElCard class="art-table-card" shadow="never" v-if="data && questionnaireData">
-      <ElRow>
+      <!-- 桌面端布局 -->
+      <ElRow class="desktop-layout">
         <ElCol :span="3"> </ElCol>
         <ElCol :span="18">
           <div class="title">{{ questionnaireData.title }}</div>
@@ -80,6 +81,92 @@
           </div>
         </ElCol>
       </ElRow>
+
+      <!-- 移动端布局 -->
+      <div class="mobile-layout">
+        <div class="mobile-header">
+          <div class="title">{{ questionnaireData.title }}</div>
+          <div class="progress-simple">
+            <span>{{ activeIndex + 1 }}</span> / <span>{{ data.questions.length }}</span>
+          </div>
+        </div>
+        
+        <div class="mobile-content">
+          <div class="issue">
+            <div
+              class="issue-item"
+              v-show="activeIndex === index"
+              v-for="(item, index) in data.questions"
+              :key="index"
+            >
+              <template v-if="item.type === '1'">
+                <radioSelect :question="item" v-model="item.answer" @onSelect="handleRadioSelect" />
+              </template>
+              <template v-if="item.type === '2'">
+                <multiSelect :question="item" v-model="item.answer" />
+              </template>
+              <template v-if="item.type === '3'">
+                <shortAnswer :question="item" v-model="item.answer" />
+              </template>
+              <template v-if="item.type === '4'">
+                <dateQuestion :question="item" v-model="item.answer" />
+              </template>
+              <template v-if="item.type === '5'">
+                <timeQuestion :question="item" v-model="item.answer" />
+              </template>
+              <template v-if="item.type === '8'">
+                <regionQuestion :question="item" v-model="item.answer" />
+              </template>
+              <template v-if="item.type === '9'">
+                <durationQuestion :question="item" v-model="item.answer" />
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- 移动端底部操作栏 -->
+        <div class="mobile-bottom-bar">
+          <!-- 第一行：上一题 / 下一题或提交 -->
+          <div class="action-row">
+            <button 
+              class="action-btn secondary" 
+              @click="preQuestion" 
+              :class="{ disabled: activeIndex === 0 }"
+            >
+              上一题
+            </button>
+            <button
+              v-if="activeIndex < data.questions.length - 1"
+              class="action-btn primary"
+              @click="nextQuestion"
+              :class="{ disabled: isAutoNavigating }"
+            >
+              下一题
+            </button>
+            <button
+              v-else
+              class="action-btn success"
+              @click="submitAnswer"
+              :class="{ disabled: isAutoNavigating }"
+            >
+              提交
+            </button>
+          </div>
+          
+          <!-- 第二行：大字模式 / 指导语 / 返回 -->
+          <div class="action-row">
+            <button class="action-btn secondary" @click="toggleFontSize">
+              {{ fontSizeMode === 'large' ? '正常字体' : '大字模式' }}
+            </button>
+            <button class="action-btn secondary" @click="openDialog">
+              指导语
+            </button>
+            <button class="action-btn secondary" @click="backBtn">
+              返回
+            </button>
+          </div>
+        </div>
+      </div>
     </ElCard>
     <!-- 指导语弹窗（首次进入） -->
     <ElDialog

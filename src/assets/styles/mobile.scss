@@ -1,0 +1,167 @@
+// 移动端响应式样式
+// 支持最小宽度: 320px (iPhone SE)
+// 断点: 768px
+
+$mobile-breakpoint: 768px;
+
+// 移动端媒体查询
+@media (max-width: $mobile-breakpoint) {
+  // 答题页面移动端适配
+  .user-page {
+    // 隐藏桌面端布局
+    .desktop-layout {
+      display: none !important;
+    }
+
+    // 显示移动端布局
+    .mobile-layout {
+      display: block !important;
+    }
+
+    // 移动端卡片内边距
+    .art-table-card {
+      padding: 12px !important;
+
+      :deep(.el-card__body) {
+        padding: 12px !important;
+      }
+    }
+
+    // 移动端标题
+    .title {
+      font-size: 20px !important;
+      margin-top: 0 !important;
+      margin-bottom: 12px !important;
+    }
+
+    // 移动端进度显示
+    .progress-simple {
+      margin: 12px 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: #5d87ff;
+      text-align: center;
+    }
+
+    // 移动端底部操作栏
+    .mobile-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom)); // 支持刘海屏
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+
+      .action-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .action-btn {
+          flex: 1;
+          min-height: 44px; // 最小点击区域
+          font-size: 16px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+
+          &.primary {
+            background-color: #5d87ff;
+            color: #fff;
+
+            &:active:not(.disabled) {
+              background-color: #4c6fd6;
+            }
+          }
+
+          &.success {
+            background-color: #67c23a;
+            color: #fff;
+            font-weight: 600;
+
+            &:active:not(.disabled) {
+              background-color: #529b2e;
+            }
+          }
+
+          &.secondary {
+            background-color: #f5f7fa;
+            color: #606266;
+
+            &:active:not(.disabled) {
+              background-color: #e5e7eb;
+            }
+          }
+
+          &.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+
+    // 为底部固定栏留出空间
+    .mobile-content {
+      padding-bottom: calc(140px + env(safe-area-inset-bottom));
+    }
+
+    // 优化对话框
+    :deep(.el-dialog) {
+      width: 90% !important;
+      max-width: 400px !important;
+      margin-top: 15vh !important;
+    }
+
+    :deep(.el-dialog__body) {
+      padding: 20px 16px !important;
+      font-size: 15px !important;
+    }
+
+    :deep(.el-dialog__footer) {
+      padding: 12px 16px !important;
+    }
+
+    :deep(.el-button) {
+      min-height: 40px !important;
+      font-size: 15px !important;
+    }
+
+    // 禁用文本选择
+    .mobile-layout {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    // 移除 hover 效果（移动端不需要）
+    * {
+      &:hover {
+        // 移动端hover状态与默认状态相同
+      }
+    }
+
+    // 优化滚动性能
+    .mobile-content {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+
+// 桌面端 - 隐藏移动端布局
+@media (min-width: #{$mobile-breakpoint + 1px}) {
+  .mobile-layout,
+  .mobile-bottom-bar {
+    display: none !important;
+  }
+}
